@@ -5,3 +5,4 @@ This repository contains machine learning codes and data pre-processing scripts 
 Following files/directories are stored in the repository.
 
 1. preprocessing_merge_videos_split_screen.py: This python script takes multiple videos which are stored at different point of time, and create a new video with split screen by synchronising them all.
+2. Feature_level_fusion.py: This script performs feature-level fusion after extracting features from Etherpad logs, Voice activity detection and speech to text data.
