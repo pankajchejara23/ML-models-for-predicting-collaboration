@@ -8,7 +8,7 @@ I am using CoTrack tool to collect data from online collaboration settings. This
 
 This repository will contain all the scripts and anlaysis code of collaboration modeling.
 
-![Screenshot 2021-07-06 at 14.01.55](/Users/pankaj/Documents/Comp_Edu_codes/overall.png)
+![Screenshot 2021-07-06 at 14.01.55](overall.png)
 
 At the moment, following scripts are available 
 
