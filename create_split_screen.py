@@ -11,6 +11,8 @@ import sys
 
 dirlist= []
 
+exclude_user = None
+
 if len(sys.argv) < 3:
     print('Incorrect use, please use the script in following way.\n')
     print("Use this format: \n python create_split_screen.py <source_direcotyr> <target_directory>")
@@ -20,6 +22,9 @@ if len(sys.argv) < 3:
 else:
     source_directory = sys.argv[1]
     target_directory = sys.argv[2]
+
+if len(sys.argv) == 4:
+    exclude_user = int(sys.argv[3])
 
 
 if not os.path.isdir(target_directory):
@@ -37,7 +42,7 @@ for f in os.listdir(source_directory):
         dirlist[group].append(f)
 
 
-def moviepy_create_split_screen(files,target_directory=None):
+def moviepy_create_split_screen(files,target_directory=None,exclude_user=None):
     duration = []
     f_clips = []
     session = files[0].split("_")[0]
@@ -56,38 +61,47 @@ def moviepy_create_split_screen(files,target_directory=None):
         f_name = f.split(".")[0]
         input_file = source_directory + "/" + f_name
         output_file = target_directory + "/" + f_name
-        if not os.path.exists(output_file):
+
+        output_file_name = output_file + ".mkv"
+        if not os.path.exists(output_file_name):
             command = "ffmpeg -i "+ input_file +".webm -c copy "+ output_file +".mkv"
             os.system(command)
+            print('Generating mkv')
         mkv_file_name = output_file + ".mkv"
         my_video = VideoFileClip(mkv_file_name)
         duration.append(my_video.duration)
 
     ts_start = [(t/1000-duration[i]) for i,t in enumerate(ts)]
+    ts_end = [t/1000 + e  for t,e in zip(ts,duration)]
+    ts_end_diff = [ ( t - min(ts_end))/1000 for t in ts_end]
 
     ts_start_diff_tmp = [ max(ts_start) - t for t in ts_start]
 
     ts_start_diff  = [ t   for t in ts_start_diff_tmp]
-
-    #ts_start_diff = [t + .40 if t == max(ts_start_diff) else t for t in ts_start_diff]
-
-    print([t/60 for t in duration])
-    ts_end = [t/1000 + e  for t,e in zip(ts,duration)]
-    ts_end_diff = [ ( t - min(ts_end))/1000 for t in ts_end]
-    print([t/60 for t in ts_start_diff])
+    #print([t/60 for t in ts_start_diff])
     print(ts_end_diff)
 
     for i,user in enumerate(users):
-        file_name = target_directory +  "/" + files[i].split(".")[0] + ".mkv"
+        file_name = "./" + target_directory +  "/" + files[i].split(".")[0] + ".mkv"
+        #print("file details: ",file_name,ts_start_diff[i],duration[i])
         my_video = VideoFileClip(file_name).subclip(ts_start_diff[i],duration[i]).margin(5)
-        wr_file_name = target_directory + "/" + files[i].split(".")[0] + '_IND' + '.mkv'
-        wr_audio_file_name = target_directory + "/" + files[i].split(".")[0] + '_audio_IND' + '.wav'
-        #my_video.audio.write_audiofile(wr_audio_file_name,ffmpeg_params=["-ac", "1"],fps=32000,nbytes=2)
-        #my_video.write_videofile(wr_file_name,fps=24,codec='libx264')
+        if my_video.w > 1000:
+            my_video = my_video.resize((640,480))
+        else:
+            my_video = my_video
+        # synchronized timestamp for current video file
+        cur_file_start_ts = int(files[i].split("_")[5].split(".")[0]) - duration[i] + ts_start_diff[i]
+        output_file_name = str(session) + '_' + str(group) + '_' + str(user) + '_SYNC_IND_' + str(int(cur_file_start_ts))
+
+        wr_file_name = target_directory + "/" + output_file_name + 'VIDEO.mkv'
+        wr_audio_file_name = target_directory + "/" + output_file_name + 'AUDIO.wav'
+        my_video.audio.write_audiofile(wr_audio_file_name,ffmpeg_params=["-ac", "1"],fps=32000,nbytes=2)
+        my_video.write_videofile(wr_file_name,fps=24,codec='libx264')
         text = "user_" + str(user)
         my_text = TextClip(text, font ="Arial-Bold", fontsize = 40, color ="red")
         txt_col = my_text.on_color(size=(my_video.w,my_video.h),color=(0,0,0),pos=(15,15),col_opacity=0.1)
         f_clip = CompositeVideoClip([my_video,txt_col])
+
         f_clips.append(f_clip)
 
     if len(f_clips) == 2:
@@ -101,14 +115,14 @@ def moviepy_create_split_screen(files,target_directory=None):
         final_clip = clips_array([[f_clips[0], f_clips[1]],[f_clips[2],f_clips[3]]])
 
 
-    final_clip.subclip(0,my_video.duration).write_videofile(final_file_name,fps=24,codec='libx264')
+    #inal_clip.subclip(0,my_video.duration).write_videofile(final_file_name,fps=24,codec='libx264')
 
 
 for key,item in dirlist.items():
     print('\nGroup:',key)
     print("------------------------")
     print('Processing...')
-    moviepy_create_split_screen(dirlist[key],target_directory)
+    moviepy_create_split_screen(dirlist[key],target_directory,exclude_user)
     print('Split screen video file is created and saved in ',target_directory)
     #print("\n".join([f for f in dirlist[key]]))
     print("------------------------")
