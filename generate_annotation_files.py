@@ -1,20 +1,19 @@
-import pandas as pd
+
 import os
+import sys
+import pandas as pd
+from moviepy.editor import *
 import datetime
+
 
 window = pd.Timedelta('30 seconds')
 
 
+
 def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end_time,window,group,output_file_name):
     """
-    user_mapping_file: mapping file from CoTrack
-    start_time: start time taken from sync videos of all participants
-    end_time: max end time from the participants
-    window: size of window
-    group: group number
-    output_file_name: Name of output file
 
-    Feature generated
+
     Etherpad logs feature:
     #1 : number of chars added (user-level)
     #2 : number of chars deleted (user-level)
@@ -29,10 +28,10 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
     # opening file
     log = pd.read_csv(log_file)
     #changing datatype of timestamp column
-    log.timestamp = pd.to_datetime(log.timestamp)
+    log.timestamp = pd.to_datetime(log.timestamp,format="%H:%M:%S %d-%m-%Y")
     # localize time in vad and speech data frame
     # CoTrack server adds timezone info into the timestmap while etherpad sever provides without timezone.
-    print('Group:',group)
+
 
     frame_start = start_time
     # fetching all authors from specified group
@@ -48,15 +47,17 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
         #print('frame start:',frame_start)
         frame_end = frame_start + window
 
+        #print(' frame start:',frame_start,'frame end:',frame_end,'End:',end_time,'condition:',frame_start <= end_time)
         # fetching data records for the specified window
         mask_log = (log['timestamp'] > frame_start) & (log['timestamp'] <= frame_end)
 
         df = log[mask_log]
 
-
+        print('-----------------------------------------')
 
         for author in authors:
             author_df = df.loc[df['author'] == author,['operation','difference']]
+            #print('  AUTHOR:',author,'Rows:',author_df.shape[0])
 
             if author_df.shape[0] != 0:
                 author_add = author_df[author_df['operation'] == '>']['difference'].sum()
@@ -70,6 +71,7 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
         frame_start = frame_end
         frames.append(frame_no)
         frame_no = frame_no +  1
+
     users = {}
     users['frame'] = frames
 
@@ -95,19 +97,13 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
         user_del = 'user-' + str(user_mapping[author]) +'_del'
         users[user_add] = added[author]
         users[user_del] = deleted[author]
-        print('Author:',author,'length:',len(added[author]))
+        #print('Author:',author,'length:',len(added[author]))
     group_df = pd.DataFrame(users)
     group_df.to_csv(output_file_name,index=False)
     return group_df
 
 
 def generate_annotation_files(video_dir,output_file_prefix,mapping_file,log_file):
-    """
-    video_dir: directory containing video files,
-    output_file_prefix: prefix to save output file,
-    mapping_file: mapping file from CoTrack
-    log_file: log file from CoTrack
-    """
     dirlist = dict()
     for f in os.listdir(video_dir):
         f_split = f.split("_")
@@ -125,6 +121,7 @@ def generate_annotation_files(video_dir,output_file_prefix,mapping_file,log_file
 
     for key in dirlist.keys():
         print('Group:',key)
+        print('============================')
         duration = []
         files = dirlist[key]
 
@@ -148,9 +145,29 @@ def generate_annotation_files(video_dir,output_file_prefix,mapping_file,log_file
         start_time = datetime.datetime.fromtimestamp(int(max(ts_start)))
         end_time = datetime.datetime.fromtimestamp(int(max(ts_end)))
         output_file = output_file_prefix +'group_'+str(key)+'.csv'
-        df = generate_annotation_file_for_group(mapping_file,log_file,start_time,end_time,window,key,output_file)
 
+        print('  Start video:',start_time,'End video:',end_time)
+        #output_feature_file = output_file_prefix + 'feature_fused_' +'group_'+str(key)+'.csv'
+
+        generate_annotation_file_for_group(mapping_file,log_file,start_time,end_time,window,key,output_file)
+        #feature_level_fusion('ITA20 Sept 30th_logs.csv','ITA20 Sept 30th_vad.csv','ITA20 Sept 30th_speech.csv',start_time,end_time,window,key,output_feature_file)
+        print('============================')
         #df = generate_annotation_file_for_group('/Users/pankaj/Documents/CoTrack2_datasets/session_39_mkv','ITA20 Sept 30th_mapping.csv','ITA20 Sept 30th_logs.csv',start_time,end_time,window,key,output_file)
 
-video_dir = '/Users/pankaj/Documents/CoTrack2_datasets/session_39_mkv'
-generate_annotation_files(video_dir,'session_39_','ITA20 Sept 30th_mapping.csv','ITA20 Sept 30th_logs.csv')
+
+
+if len(sys.argv) < 4:
+    print('Incorrect use, please use the script in following way.\n')
+    print("Use this format: \n python create_split_screen.py <video_directory_path> <label> <mapping_file> <logs_file>")
+    print('\nhere \n        <video_directory_path> is directory containing merged files which were obtained after merging CoTrack files.')
+    print('        <label> is the prefix for labeling annotation files.')
+    print('        <mapping_file> is the mapping file from CoTrack.')
+    print('        <logs_file> is the Etherpad logs file.\n\n')
+    exit()
+else:
+    video_dir = sys.argv[1]
+    label = sys.argv[2]
+    mapping_file = sys.argv[3]
+    logs_file = sys.argv[4]
+
+    generate_annotation_files(video_dir,label,mapping_file, logs_file)
