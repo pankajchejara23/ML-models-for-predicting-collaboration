@@ -56,6 +56,8 @@ def feature_level_fusion(log_file,vad_file,speech_file,start_time,end_time,windo
         record = mapping.iloc[i,:]
         user_mapping[record['authorid']] = record['username']
 
+    
+
 
     #changing datatype of timestamp column
     log.timestamp = pd.to_datetime(log.timestamp,format="%H:%M:%S %d-%m-%Y")
@@ -162,6 +164,8 @@ def feature_level_fusion(log_file,vad_file,speech_file,start_time,end_time,windo
 
 
 
+
+
             if author_df.shape[0] != 0:
                 author_add = author_df[author_df['operation'] == '>']['difference'].sum()
                 author_del = author_df[author_df['operation'] == '<']['difference'].sum()
@@ -178,7 +182,7 @@ def feature_level_fusion(log_file,vad_file,speech_file,start_time,end_time,windo
                 speak[author].append(0)
 
             if author_speech_df.shape[0] != 0:
-                speech_text[author].append(author_speech_df['speech'].values)
+                speech_text[author].append(list(set(author_speech_df['speech'].values)))
             else:
                 speech_text[author].append('')
 
@@ -206,7 +210,7 @@ def feature_level_fusion(log_file,vad_file,speech_file,start_time,end_time,windo
     users['text'] = text
     group_df = pd.DataFrame(users)
     return group_df
-    
+
 def generateFeatures(video_dir,log_file,vad_file,speech_file,window,output_file_prefix,mapping_file):
     dirlist = dict()
     for f in os.listdir(video_dir):
