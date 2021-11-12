@@ -121,9 +121,9 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
 
 
 if len(sys.argv) < 3:
-    print('Incorrect use, please use the script in following way.\n')
+    print('Incorrect use, please use the script in the following way.\n')
     print("Use this format: \n python extractFaceLandmarks.py <video_file> <feature_file_name> <draw> <save>")
-    print('\n      here \n        <video_file> name of the video file with the path')
+    print('\n      here \n        <video_file> is the name of the video file with the path')
     print('        <feature_file_name> is the name of output file.')
     print('        <draw> is the flag for drawing the landmarks and showing it. It can be skipped.')
     print('        <save> is the flag for saving resultant image with landmarks drawn on it. It can be skipped.')
@@ -142,4 +142,4 @@ else:
     print(draw_flag,save_flag)
     df = extractMediaPipeFeatures(video_file,draw_flag,save_flag)
     df.to_csv(feature_file_name,index=False)
-    print('Landmark features have been save in ',feature_file_name)
+    print('Landmark features have been saved in ',feature_file_name)
