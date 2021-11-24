@@ -8,6 +8,15 @@ import datetime
 
 window = pd.Timedelta('30 seconds')
 
+def get_win_start_end(fno):
+    if fno % 2 == 1:
+        s = str(int(fno/2)).zfill(2)+":00"
+        e = str(int(fno/2)).zfill(2)+":30"
+    else:
+        s = str(int(fno/2-1)).zfill(2)+":30"
+        e = str(int(fno/2)).zfill(2)+":00"
+
+    return s,e
 
 
 def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end_time,window,group,output_file_name):
@@ -25,6 +34,10 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
     added = {}          # storing number of chars added by each user
     deleted = {}        # storing number of chars deleted by each user
     frame_no = 1
+
+    win_start = []
+    win_end = []
+
     # opening file
     log = pd.read_csv(log_file)
     #changing datatype of timestamp column
@@ -53,7 +66,7 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
 
         df = log[mask_log]
 
-        print('-----------------------------------------')
+        #print('-----------------------------------------')
 
         for author in authors:
             author_df = df.loc[df['author'] == author,['operation','difference']]
@@ -70,11 +83,20 @@ def generate_annotation_file_for_group(user_mapping_file,log_file,start_time,end
 
         frame_start = frame_end
         frames.append(frame_no)
+
+
+        st, en = get_win_start_end(frame_no)
+        #print (frame_no,' ',st,',',en)
+        win_start.append(st)
+        win_end.append(en)
         frame_no = frame_no +  1
+
+    print('  Frame generated:',frame_no)
 
     users = {}
     users['frame'] = frames
-
+    users['start'] = win_start
+    users['end'] = win_end
     mapping = pd.read_csv(user_mapping_file)
     user_mapping = dict()
     for i in range(mapping.shape[0]):
@@ -158,7 +180,7 @@ def generate_annotation_files(video_dir,output_file_prefix,mapping_file,log_file
 
 if len(sys.argv) < 4:
     print('Incorrect use, please use the script in following way.\n')
-    print("Use this format: \n python create_split_screen.py <video_directory_path> <label> <mapping_file> <logs_file>")
+    print("Use this format: \n python generate_annotation_files.py <video_directory_path> <label> <mapping_file> <logs_file>")
     print('\nhere \n        <video_directory_path> is directory containing merged files which were obtained after merging CoTrack files.')
     print('        <label> is the prefix for labeling annotation files.')
     print('        <mapping_file> is the mapping file from CoTrack.')
