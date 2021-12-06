@@ -5,6 +5,7 @@ import math
 import pandas as pd
 from typing import List, Mapping, Optional, Tuple, Union
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -150,6 +151,8 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
                                         _normalized_to_pixel_coordinates(shape[287], image_cols, image_rows)      # Right mouth corner
                                     ], dtype="double")
                 (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+                # Rotation from r
+                r = Rotation.from_rotvec(rotation_vector.reshape(3,))
                 (nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
                 p1 = ( int(image_points[0][0]), int(image_points[0][1]))
                 p2 = ( int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
@@ -160,25 +163,20 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
                 # for (x, y) in shape:
                 #     cv2.circle(img, (x, y), 4, (255, 255, 0), -1)
                 # cv2.putText(img, str(p1), p1, font, 1, (0, 255, 255), 1)
-                try:
-                    m = (p2[1] - p1[1])/(p2[0] - p1[0])
-                    ang1 = int(math.degrees(math.atan(m)))
-                except:
-                    ang1 = 90
 
-                try:
-                    m = (x2[1] - x1[1])/(x2[0] - x1[0])
-                    ang2 = int(math.degrees(math.atan(-1/m)))
-                except:
-                    ang2 = 90
 
                 # print('div by zero error')
-                cv2.putText(image, str(ang1), tuple(p1), font, 2, (128, 255, 255), 3)
-                cv2.putText(image, str(ang2), tuple(x1), font, 2, (255, 255, 128), 3)
-
 
                 # we need image height and width for converting normalized coordinates back to original
-                print(p1,p2)
+                #print(p1,p2)
+                angles = r.as_euler('zxy',degrees=True)
+                print(" ")
+                x_angle = int(angles[1])
+                y_angle  = int(angles[2])
+                cv2.putText(image1, 'X:'+str(x_angle), (10,30), font, 2, (255, 255, 128), 3)
+                cv2.putText(image1, 'Y:'+str(y_angle), (10,80), font, 2, (255, 255, 128), 3)
+
+
                 # Draw landmark annotation on the image.
                 image.flags.writeable = True
                 cv2.line(image, p1, p2, (0, 255, 255), 2)
