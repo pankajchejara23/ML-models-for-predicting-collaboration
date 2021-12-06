@@ -40,7 +40,9 @@ def draw_annotation_box(img, rotation_vector, translation_vector, camera_matrix,
     """Draw a 3D box as annotation of pose"""
     point_3d = []
     dist_coeffs = np.zeros((4,1))
-    rear_size = 1
+    front_size = img.shape[1]/4
+    front_depth = img.shape[1]/4
+    rear_size = img.shape[1]/6
     rear_depth = 0
     point_3d.append((-rear_size, -rear_size, rear_depth))
     point_3d.append((-rear_size, rear_size, rear_depth))
@@ -48,8 +50,7 @@ def draw_annotation_box(img, rotation_vector, translation_vector, camera_matrix,
     point_3d.append((rear_size, -rear_size, rear_depth))
     point_3d.append((-rear_size, -rear_size, rear_depth))
 
-    front_size = img.shape[1]/4
-    front_depth = front_size*2
+
     point_3d.append((-front_size, -front_size, front_depth))
     point_3d.append((-front_size, front_size, front_depth))
     point_3d.append((front_size, front_size, front_depth))
