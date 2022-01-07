@@ -258,6 +258,7 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
     return output_df
 
 
+
 if len(sys.argv) < 3:
     print('Incorrect use, please use the script in the following way.\n')
     print("Use this format: \n python extractFaceLandmarks.py <video_file> <feature_file_name> <draw> <save>")
