@@ -39,16 +39,12 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
     cap = cv2.VideoCapture(video_file)
     # columns of the output csv file
     face_landmarks_columns = []
-
-
-
     # there are 468 face landmarks  returned by MediaPipe
     for i in range(468):
         x = str(i)+'_x'
         y = str(i) + '_y'
         face_landmarks_columns.append(x)
         face_landmarks_columns.append(y)
-
     output_df = pd.DataFrame(columns=face_landmarks_columns)
     # for labeling resultant image
     i = 0
@@ -65,30 +61,21 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
             # pass by reference.
             image.flags.writeable = False
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
-
             results = holistic.process(image)
-
             # we need image height and width for converting normalized coordinates back to original
             image_rows, image_cols, _ = image.shape
-
             # Draw landmark annotation on the image.
             image.flags.writeable = True
-
             idx_to_coordinates = {}
-
             for idx, landmark in enumerate(results.face_landmarks.landmark):
                 x_label = str(idx) + '_x'
                 y_label = str(idx) + '_y'
-
                 if ((landmark.HasField('visibility') and
                      landmark.visibility < _VISIBILITY_THRESHOLD) or
                     (landmark.HasField('presence') and
                      landmark.presence < _PRESENCE_THRESHOLD)):
                     continue
-                landmark_px = _normalized_to_pixel_coordinates(landmark.x, landmark.y,
-                                                   image_cols, image_rows)
+                landmark_px = _normalized_to_pixel_coordinates(landmark.x, landmark.y,                                                   image_cols, image_rows)
                 if landmark_px:
                     idx_to_coordinates[x_label] = landmark_px[0]
                     idx_to_coordinates[y_label] = landmark_px[1]
@@ -96,10 +83,8 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
                     # if landmark is not present than insert empty values
                     idx_to_coordinates[x_label] = ''
                     idx_to_coordinates[y_label] = ''
-
             # append the landmark to the dataframe
             output_df = output_df.append(idx_to_coordinates,ignore_index=True)
-
             if draw:
                 mp_drawing.draw_landmarks(
                     image,
@@ -115,7 +100,6 @@ def extractMediaPipeFeatures(video_file,draw=False,save=False):
 
             print('Processing frame:',i)
             i = i + 1
-
     cap.release()
     return output_df
 
@@ -127,8 +111,6 @@ if len(sys.argv) < 3:
     print('        <feature_file_name> is the name of output file.')
     print('        <draw> is the flag for drawing the landmarks and showing it. It can be skipped.')
     print('        <save> is the flag for saving resultant image with landmarks drawn on it. It can be skipped.')
-
-
     exit()
 else:
     video_file = sys.argv[1]
