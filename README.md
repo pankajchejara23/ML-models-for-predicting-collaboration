@@ -4,9 +4,11 @@ This repository contains machine learning codes and data pre-processing scripts 
 
 An overall idea of this article is presented in below figure.
 
-I am using CoTrack tool to collect data from online collaboration settings. This tool provides various files of students acitivities (e.g., voice activity detection, google speech to text, writing activities, audio/video data). The ultimate goal is to build machine learning models which can predict collaboration in students in classroom settings using CoTrack.
+I am using [CoTrack tool](https://www.cotrack.website/) (developed as part of my research work) to collect data from online collaboration settings. This tool provides various traces of students acitivities (e.g., voice activity detection, google speech to text, writing activities, audio/video data). 
 
-This repository will contain all the scripts and anlaysis code of collaboration modeling.
+The ultimate goal is to build machine learning models which can predict collaboration in students in classroom settings using multimodal data from digital and physical spaces.
+
+This repository contains all the scripts and anlaysis code for collaboration modeling.
 
 ![Screenshot 2021-07-06 at 14.01.55](overall-1.png)
 
